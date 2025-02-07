@@ -24,20 +24,6 @@ description:   <<https://raw.githubusercontent.com/LumiGuide/haskell-opencv/mast
                Make sure to checkout the
                <https://github.com/LumiGuide/haskell-opencv/tree/master/opencv-examples opencv-examples>.
 
-extra-source-files:
-    CHANGELOG.md
-    data/*.png
-    data/*.jpg
-    data/*.mp4
-    data/*.xml
-
-extra-doc-files:
-    data/*.jpg
-    doc/generated/*.png
-    doc/generated/examples/*.png
-    doc/generated/examples/*.gif
-    doc/color_conversions.png
-
 source-repository head
   type:     git
   location: git://github.com/LumiGuide/haskell-opencv.git
