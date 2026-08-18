@@ -65,8 +65,8 @@ data JpegParams =
      , jpegParamProgressive     :: Bool
      , jpegParamOptimize        :: Bool
      , jpegParamRestartInterval :: Word16
-     , jpegParamLumaQuality     :: Int
-     , jpegParamChromaQuality   :: Int
+     , jpegParamLumaQuality     :: Int -- ^ \[0..100\], or negative to leave unset
+     , jpegParamChromaQuality   :: Int -- ^ \[0..100\], or negative to leave unset
      } deriving Show
 
 defaultJpegParams :: JpegParams
@@ -88,14 +88,24 @@ defaultJpegParams =
 #num IMWRITE_JPEG_CHROMA_QUALITY
 
 marshalJpegParams :: JpegParams -> VS.Vector CInt
-marshalJpegParams params =
+marshalJpegParams params = VS.fromList $
     [ c'IMWRITE_JPEG_QUALITY       , fromIntegral $ jpegParamQuality         params
     , c'IMWRITE_JPEG_PROGRESSIVE   , fromBool     $ jpegParamProgressive     params
     , c'IMWRITE_JPEG_OPTIMIZE      , fromBool     $ jpegParamOptimize        params
     , c'IMWRITE_JPEG_RST_INTERVAL  , fromIntegral $ jpegParamRestartInterval params
-    , c'IMWRITE_JPEG_LUMA_QUALITY  , fromIntegral $ jpegParamLumaQuality     params
-    , c'IMWRITE_JPEG_CHROMA_QUALITY, fromIntegral $ jpegParamChromaQuality   params
     ]
+    ++ unlessUnset c'IMWRITE_JPEG_LUMA_QUALITY   (jpegParamLumaQuality   params)
+    ++ unlessUnset c'IMWRITE_JPEG_CHROMA_QUALITY (jpegParamChromaQuality params)
+  where
+    -- OpenCV only applies its own quantisation tables when *both* the luma and chroma
+    -- quality are in [0..100], so a negative value means "unset". It validates every
+    -- key it is handed regardless, and logs a warning for each out-of-range value
+    -- before ignoring it, once per encode. So omit the key instead of passing the
+    -- sentinel through.
+    unlessUnset :: CInt -> Int -> [CInt]
+    unlessUnset key value
+        | value < 0 = []
+        | otherwise = [key, fromIntegral value]
 
 data PngStrategy
    = PngStrategyDefault
